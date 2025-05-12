@@ -21,11 +21,13 @@ class CameraController : UIViewController {
     var point: CGPoint? = nil
     
     var imageView: UIImageView? = nil
-    var button: FakeButton? = nil
+    var optionsButton: FakeButton? = nil, captureButton: FakeButton? = nil
     var coloursCollectionView: ColoursCollectionView? = nil
     var colour: UIColor? = nil
     
-    let longHoldTip: LongHoldTip = .init()
+    let ellipsisTip: EllipsisTip = .init()
+    
+    let collectionViewLayout: CollectionViewLayout = .init()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -60,33 +62,81 @@ class CameraController : UIViewController {
         imageView.centerXAnchor.constraint(equalTo: previewView.centerXAnchor).isActive = true
         imageView.centerYAnchor.constraint(equalTo: previewView.centerYAnchor).isActive = true
         
-        button = .init("Capture", UIBlurEffect.Style(rawValue: 1100) ?? .systemUltraThinMaterial, frame: .zero)
-        guard let button else { return }
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.handler = { [weak self] button in
-            UIImpactFeedbackGenerator(view: button).impactOccurred()
-            
+        optionsButton = .init(.init(systemName: "ellipsis"), .private, frame: .zero)
+        guard let optionsButton else { return }
+        optionsButton.translatesAutoresizingMaskIntoConstraints = false
+        let interaction: UIContextMenuInteraction = .init(delegate: self)
+        optionsButton.addInteraction(interaction)
+        previewView.addSubview(optionsButton)
+        
+        optionsButton.bottomAnchor.constraint(equalTo: previewView.safeAreaLayoutGuide.bottomAnchor, constant: -20).isActive = true
+        optionsButton.leadingAnchor.constraint(equalTo: previewView.safeAreaLayoutGuide.leadingAnchor, constant: 20).isActive = true
+        
+        captureButton = .init(.init(systemName: "circle"), .private, frame: .zero)
+        guard let captureButton else { return }
+        captureButton.translatesAutoresizingMaskIntoConstraints = false
+        captureButton.handler = { [weak self] button in
             guard let self,
                   let coloursCollectionView = self.coloursCollectionView,
                   let colour = self.colour else { return }
+            
+            let colours = coloursCollectionView.colours() ?? []
+            
+            if colours.count == 5 {
+                UINotificationFeedbackGenerator(view: optionsButton).notificationOccurred(.success)
+                if let imageView = optionsButton.imageView, let image: UIImage = .init(systemName: "swatchpalette")?
+                    .applyingSymbolConfiguration(.init(hierarchicalColor: .label))?
+                    .applyingSymbolConfiguration(.init(weight: .bold)) {
+                    imageView.setSymbolImage(image, contentTransition: .replace) { context in
+                        guard let sender = context.sender as? UIImageView, let image: UIImage = .init(systemName: "ellipsis")?
+                            .applyingSymbolConfiguration(.init(hierarchicalColor: .label))?
+                            .applyingSymbolConfiguration(.init(weight: .bold)) else { return }
+                        sender.setSymbolImage(image, contentTransition: .replace)
+                    }
+                }
+            }
+            
+            if colours.count == 8 {
+                let checkered: String = if #available(iOS 18, *) {
+                    "circle.bottomrighthalf.pattern.checkered"
+                } else {
+                    "circle.bottomrighthalf.checkered"
+                }
+                
+                UINotificationFeedbackGenerator(view: optionsButton).notificationOccurred(.success)
+                if let imageView = optionsButton.imageView, let image: UIImage = .init(systemName: checkered)?
+                    .applyingSymbolConfiguration(.init(hierarchicalColor: .label))?
+                    .applyingSymbolConfiguration(.init(weight: .bold)) {
+                    imageView.setSymbolImage(image, contentTransition: .replace) { context in
+                        guard let sender = context.sender as? UIImageView, let image: UIImage = .init(systemName: "ellipsis")?
+                            .applyingSymbolConfiguration(.init(hierarchicalColor: .label))?
+                            .applyingSymbolConfiguration(.init(weight: .bold)) else { return }
+                        sender.setSymbolImage(image, contentTransition: .replace)
+                    }
+                }
+            }
+            
+            if ![5, 8].contains(colours.count) {
+                UIImpactFeedbackGenerator(view: button).impactOccurred()
+            }
             coloursCollectionView.add(colour)
             self.colour = nil
         }
-        previewView.addSubview(button)
+        previewView.addSubview(captureButton)
         
-        button.bottomAnchor.constraint(equalTo: previewView.safeAreaLayoutGuide.bottomAnchor, constant: -20).isActive = true
-        button.trailingAnchor.constraint(equalTo: previewView.safeAreaLayoutGuide.trailingAnchor, constant: -20).isActive = true
+        captureButton.bottomAnchor.constraint(equalTo: previewView.safeAreaLayoutGuide.bottomAnchor, constant: -20).isActive = true
+        captureButton.trailingAnchor.constraint(equalTo: previewView.safeAreaLayoutGuide.trailingAnchor, constant: -20).isActive = true
         
-        coloursCollectionView = .init()
+        coloursCollectionView = .init(collectionViewLayout)
         guard let coloursCollectionView else { return }
         coloursCollectionView.translatesAutoresizingMaskIntoConstraints = false
         coloursCollectionView.cameraController = self
         previewView.addSubview(coloursCollectionView)
         
-        coloursCollectionView.leadingAnchor.constraint(equalTo: previewView.safeAreaLayoutGuide.leadingAnchor, constant: 20).isActive = true
+        coloursCollectionView.leadingAnchor.constraint(equalTo: optionsButton.safeAreaLayoutGuide.trailingAnchor, constant: 12).isActive = true
         coloursCollectionView.bottomAnchor.constraint(equalTo: previewView.safeAreaLayoutGuide.bottomAnchor, constant: -20).isActive = true
-        coloursCollectionView.trailingAnchor.constraint(equalTo: button.safeAreaLayoutGuide.leadingAnchor, constant: -12).isActive = true
-        coloursCollectionView.heightAnchor.constraint(equalTo: button.safeAreaLayoutGuide.heightAnchor).isActive = true
+        coloursCollectionView.trailingAnchor.constraint(equalTo: captureButton.safeAreaLayoutGuide.leadingAnchor, constant: -12).isActive = true
+        coloursCollectionView.heightAnchor.constraint(equalTo: captureButton.safeAreaLayoutGuide.heightAnchor).isActive = true
         
         guard let device else { return }
         sessionQueue.async { [weak self] in
@@ -114,9 +164,9 @@ class CameraController : UIViewController {
         }
         
         Task { @MainActor in
-            for await shouldDisplay in longHoldTip.shouldDisplayUpdates {
+            for await shouldDisplay in ellipsisTip.shouldDisplayUpdates {
                 if shouldDisplay {
-                    let controller = TipUIPopoverViewController(longHoldTip, sourceItem: coloursCollectionView)
+                    let controller = TipUIPopoverViewController(ellipsisTip, sourceItem: optionsButton)
                     present(controller, animated: true)
                 } else if presentedViewController is TipUIPopoverViewController {
                     dismiss(animated: true)
@@ -151,5 +201,69 @@ extension CameraController : AVCaptureVideoDataOutputSampleBufferDelegate {
               let colour = pixelBuffer.colour else { return }
         
         self.colour = colour
+    }
+}
+
+extension CameraController : UIContextMenuInteractionDelegate {
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        let palettes = UserDefaults.standard.array(forKey: "palettes") as? [[String]]
+        
+        let browsePalettesAction: UIAction = .init(title: "Browse Palettes",
+                                                   subtitle: "Under Construction",
+                                                   image: .init(systemName: "swatchpalette"),
+                                                   attributes: .disabled,
+                                                   handler: { _ in })
+        
+        guard let coloursCollectionView, let colours = coloursCollectionView.colours(), colours.count >= 6 else {
+            var children: [UIAction] = []
+            if let _ = palettes {
+                children.append(browsePalettesAction)
+            }
+            
+            return .init(actionProvider: { elements in
+                .init(children: children)
+            })
+        }
+        
+        var children: [UIAction] = [
+            .init(title: "Save Palette",
+                  image: .init(systemName: "swatchpalette"),
+                  handler: { _ in
+                      if var palettes {
+                          palettes.append(colours)
+                          UserDefaults.standard.set(palettes, forKey: "palettes")
+                      } else {
+                          UserDefaults.standard.set([colours], forKey: "palettes")
+                      }
+                  })
+        ]
+        
+        if let _ = palettes {
+            children.prepend(browsePalettesAction)
+        }
+        
+        let checkered: String = if #available(iOS 18, *) {
+            "circle.bottomrighthalf.pattern.checkered"
+        } else {
+            "circle.bottomrighthalf.checkered"
+        }
+        
+        var gradientChildren: [UIAction] = []
+        if colours.count == 9 {
+            gradientChildren.append(.init(title: "Create Gradient", image: .init(systemName: checkered), handler: { [weak self] _ in
+                guard let self else { return }
+                
+                let coloursController: ColourController = .init(colours)
+                coloursController.modalPresentationStyle = .fullScreen
+                self.present(coloursController, animated: true)
+            }))
+        }
+        
+        return .init(actionProvider: { elements in
+            .init(children: [
+                UIMenu(options: .displayInline, children: gradientChildren),
+                UIMenu(options: .displayInline, children: children)
+            ])
+        })
     }
 }

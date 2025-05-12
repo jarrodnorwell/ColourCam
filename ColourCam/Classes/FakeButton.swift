@@ -14,6 +14,39 @@ class FakeButton : UIView {
     
     var visualEffectView: UIVisualEffectView? = nil
     var label: UILabel? = nil
+    var imageView: UIImageView? = nil
+    
+    init(_ image: UIImage? = nil, _ style: UIBlurEffect.Style = .systemMaterialLight, frame: CGRect) {
+        super.init(frame: frame)
+        clipsToBounds = true
+        layer.cornerCurve = .continuous
+        
+        visualEffectView = .init(effect: UIBlurEffect(style: style))
+        guard let visualEffectView else { return }
+        visualEffectView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(visualEffectView)
+        
+        visualEffectView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor).isActive = true
+        visualEffectView.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor).isActive = true
+        visualEffectView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor).isActive = true
+        visualEffectView.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor).isActive = true
+        
+        imageView = .init(image: image?
+            .applyingSymbolConfiguration(.init(hierarchicalColor: .label))?
+            .applyingSymbolConfiguration(.init(weight: .bold)))
+        guard let imageView else { return }
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        visualEffectView.contentView.addSubview(imageView)
+        
+        imageView.topAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.topAnchor, constant: 12).isActive = true
+        imageView.leadingAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.leadingAnchor, constant: 12).isActive = true
+        imageView.bottomAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.bottomAnchor, constant: -12).isActive = true
+        imageView.trailingAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.trailingAnchor, constant: -12).isActive = true
+        
+        widthAnchor.constraint(equalToConstant: 50).isActive = true
+        heightAnchor.constraint(equalTo: widthAnchor).isActive = true
+    }
     
     init(_ text: String, _ style: UIBlurEffect.Style = .systemMaterialLight, frame: CGRect) {
         super.init(frame: frame)
@@ -25,15 +58,15 @@ class FakeButton : UIView {
         visualEffectView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(visualEffectView)
         
-        visualEffectView.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        visualEffectView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
-        visualEffectView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        visualEffectView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        visualEffectView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor).isActive = true
+        visualEffectView.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor).isActive = true
+        visualEffectView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor).isActive = true
+        visualEffectView.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor).isActive = true
         
         label = .init()
         guard let label else { return }
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .boldSystemFont(ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize)
+        label.font = .bold(.body)
         label.text = text
         label.textAlignment = .center
         label.textColor = if style == .systemMaterialLight {
@@ -43,10 +76,11 @@ class FakeButton : UIView {
         }
         visualEffectView.contentView.addSubview(label)
         
-        label.topAnchor.constraint(equalTo: visualEffectView.contentView.topAnchor, constant: 12).isActive = true
-        label.leadingAnchor.constraint(equalTo: visualEffectView.contentView.leadingAnchor, constant: 20).isActive = true
-        label.bottomAnchor.constraint(equalTo: visualEffectView.contentView.bottomAnchor, constant: -12).isActive = true
-        label.trailingAnchor.constraint(equalTo: visualEffectView.contentView.trailingAnchor, constant: -20).isActive = true
+        label.centerYAnchor.constraint(equalTo: safeAreaLayoutGuide.centerYAnchor).isActive = true
+        label.leadingAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.leadingAnchor, constant: 20).isActive = true
+        label.trailingAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.trailingAnchor, constant: -20).isActive = true
+        
+        heightAnchor.constraint(equalToConstant: 50).isActive = true
     }
     
     required init?(coder: NSCoder) {
@@ -67,5 +101,10 @@ class FakeButton : UIView {
     func set(_ text: String) {
         guard let label else { return }
         label.text = text
+    }
+    
+    func set(_ image: UIImage? = nil) {
+        guard let imageView else { return }
+        imageView.image = image
     }
 }

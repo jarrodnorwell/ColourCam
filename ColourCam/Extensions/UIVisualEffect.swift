@@ -9,5 +9,5 @@ import Foundation
 import UIKit
 
 extension UIVisualEffect {
-    static var `private`: UIVisualEffect { UIBlurEffect(style: .init(rawValue: 1100) ?? .systemUltraThinMaterial) }
+    static var `private`: UIVisualEffect { UIBlurEffect(style: .private) }
 }

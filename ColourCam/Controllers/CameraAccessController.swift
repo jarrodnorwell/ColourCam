@@ -28,7 +28,7 @@ class CameraAccessController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = nil
+        view.backgroundColor = .systemBackground
         
         var title: String = "Allow Access"
         Task {
@@ -43,10 +43,15 @@ class CameraAccessController: UIViewController {
         }
         
         let meshGradientView: UIHostingController = .init(rootView: MeshGradientView())
+        meshGradientView.view.translatesAutoresizingMaskIntoConstraints = false
         addChild(meshGradientView)
-        meshGradientView.view.frame = view.frame
         view.addSubview(meshGradientView.view)
         meshGradientView.didMove(toParent: self)
+        
+        meshGradientView.view.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        meshGradientView.view.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        meshGradientView.view.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        meshGradientView.view.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         
         let visualEffectView: UIVisualEffectView = .init(effect: UIVibrancyEffect(blurEffect: .init(style: .systemMaterialDark)))
         visualEffectView.translatesAutoresizingMaskIntoConstraints = false
@@ -57,21 +62,15 @@ class CameraAccessController: UIViewController {
         visualEffectView.bottomAnchor.constraint(equalTo: meshGradientView.view.bottomAnchor).isActive = true
         visualEffectView.trailingAnchor.constraint(equalTo: meshGradientView.view.trailingAnchor).isActive = true
         
-        let hierarchicalColor: UIColor = if traitCollection.userInterfaceStyle == .dark {
-            .white
-        } else {
-            .black
-        }
-        
-        imageView = .init(image: .init(systemName: "camera.fill")?
-            .applyingSymbolConfiguration(.init(hierarchicalColor: hierarchicalColor)))
+        imageView = .init(image: .init(systemName: "camera.fill"))
         guard let imageView else { return }
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFit
         visualEffectView.contentView.addSubview(imageView)
         
         imageView.centerXAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.centerXAnchor).isActive = true
-        imageView.widthAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.widthAnchor, multiplier: 1 / 3).isActive = true
+        imageView.widthAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.widthAnchor,
+                                         multiplier: 1 / (UIDevice.current.userInterfaceIdiom == .pad ? 5 : 3)).isActive = true
         imageView.heightAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.widthAnchor).isActive = true
         
         label = .init(frame: .zero)

@@ -9,6 +9,14 @@ import Foundation
 import UIKit
 
 extension UIColor {
+    static func fromHex(_ rgba: UInt32) -> UIColor {
+        return UIColor(
+            red: CGFloat((Float((rgba & 0xff0000) >> 16)) / 255.0),
+            green: CGFloat((Float((rgba & 0x00ff00) >> 8)) / 255.0),
+            blue: CGFloat((Float((rgba & 0x0000ff) >> 0)) / 255.0),
+            alpha: 1.0)
+    }
+    
     var darker: UIColor {
         var r: CGFloat = 0
         var g: CGFloat = 0

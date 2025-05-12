@@ -15,10 +15,9 @@ class ColoursCollectionView : UIView {
     var dataSource: UICollectionViewDiffableDataSource<String, UIColor>? = nil
     var snapshot: NSDiffableDataSourceSnapshot<String, UIColor>? = nil
     
-    var collectionViewLayout: CollectionViewLayout = .init()
     var cameraController: CameraController? = nil
     
-    override init(frame: CGRect) {
+    init(_ collectionViewLayout: CollectionViewLayout, frame: CGRect = .zero) {
         super.init(frame: frame)
         clipsToBounds = true
         layer.cornerCurve = .continuous
@@ -28,12 +27,12 @@ class ColoursCollectionView : UIView {
         visualEffectView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(visualEffectView)
         
-        visualEffectView.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        visualEffectView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
-        visualEffectView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        visualEffectView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        visualEffectView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor).isActive = true
+        visualEffectView.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor).isActive = true
+        visualEffectView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor).isActive = true
+        visualEffectView.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor).isActive = true
         
-        collectionView = .init(frame: .zero, collectionViewLayout: collectionViewLayout.layout)
+        collectionView = .init(frame: .zero, collectionViewLayout: collectionViewLayout.colours)
         guard let collectionView else { return }
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.backgroundColor = nil
@@ -42,18 +41,36 @@ class ColoursCollectionView : UIView {
         collectionView.showsHorizontalScrollIndicator = false
         visualEffectView.contentView.addSubview(collectionView)
         
-        collectionView.topAnchor.constraint(equalTo: visualEffectView.contentView.topAnchor, constant: 6).isActive = true
-        collectionView.leadingAnchor.constraint(equalTo: visualEffectView.contentView.leadingAnchor, constant: 6).isActive = true
-        collectionView.bottomAnchor.constraint(equalTo: visualEffectView.contentView.bottomAnchor, constant: -6).isActive = true
-        collectionView.trailingAnchor.constraint(equalTo: visualEffectView.contentView.trailingAnchor, constant: -6).isActive = true
+        collectionView.topAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.topAnchor, constant: 6).isActive = true
+        collectionView.leadingAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.leadingAnchor, constant: 6).isActive = true
+        collectionView.bottomAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.bottomAnchor, constant: -6).isActive = true
+        collectionView.trailingAnchor.constraint(equalTo: visualEffectView.contentView.safeAreaLayoutGuide.trailingAnchor, constant: -6).isActive = true
         
         let cellRegistration: UICollectionView.CellRegistration<ColourCell, UIColor> = .init { $0.set($2) }
         
         dataSource = .init(collectionView: collectionView) { $0.dequeueConfiguredReusableCell(using: cellRegistration, for: $1, item: $2) }
         
+        let color1 = UIColor(red: 0.95, green: 0.35, blue: 0.35, alpha: 1.0) // soft red
+        let color2 = UIColor(red: 0.95, green: 0.65, blue: 0.35, alpha: 1.0) // orange
+        let color3 = UIColor(red: 0.95, green: 0.85, blue: 0.35, alpha: 1.0) // golden yellow
+        let color4 = UIColor(red: 0.65, green: 0.95, blue: 0.35, alpha: 1.0) // lime green
+        let color5 = UIColor(red: 0.35, green: 0.95, blue: 0.65, alpha: 1.0) // mint green
+        let color6 = UIColor(red: 0.35, green: 0.95, blue: 0.95, alpha: 1.0) // cyan
+        let color7 = UIColor(red: 0.35, green: 0.65, blue: 0.95, alpha: 1.0) // sky blue
+        let color8 = UIColor(red: 0.65, green: 0.35, blue: 0.95, alpha: 1.0) // violet
+        let color9 = UIColor(red: 0.95, green: 0.35, blue: 0.85, alpha: 1.0) // pink
+
+        let gradientColors = [
+            color1, color2, color3, color4, color5,
+            color6, color7, color8, color9
+        ]
+        
         snapshot = .init()
         guard let dataSource, var snapshot else { return }
         snapshot.appendSections(["Colours"])
+#if targetEnvironment(simulator)
+        snapshot.appendItems(gradientColors, toSection: "Colours")
+#endif
         Task { await dataSource.apply(snapshot) }
     }
     
@@ -81,6 +98,12 @@ class ColoursCollectionView : UIView {
                   let indexPath = dataSource.indexPath(for: colour) else { return }
             collectionView.scrollToItem(at: indexPath, at: .right, animated: true)
         }
+    }
+    
+    func colours() -> [String]? {
+        guard let dataSource else { return nil }
+        let snapshot = dataSource.snapshot()
+        return snapshot.itemIdentifiers.map { $0.hex }
     }
 }
 

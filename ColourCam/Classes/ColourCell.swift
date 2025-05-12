@@ -23,10 +23,10 @@ class ColourCell : UICollectionViewCell {
         label.textAlignment = .center
         addSubview(label)
         
-        label.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12).isActive = true
-        label.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12).isActive = true
+        label.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor).isActive = true
+        label.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 12).isActive = true
+        label.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor).isActive = true
+        label.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -12).isActive = true
     }
     
     required init?(coder: NSCoder) {
@@ -36,6 +36,21 @@ class ColourCell : UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         layer.cornerRadius = frame.height / 2
+    }
+    
+    func set(_ string: String) {
+        guard let hex = UInt32(string.replacingOccurrences(of: "#", with: ""), radix: 16) else { return }
+        let colour: UIColor = .fromHex(hex)
+        
+        backgroundColor = colour
+        
+        guard let label else { return }
+        label.text = colour.hex
+        label.textColor = if colour.isLight {
+            colour.darker
+        } else {
+            colour.lighter
+        }
     }
     
     func set(_ colour: UIColor) {

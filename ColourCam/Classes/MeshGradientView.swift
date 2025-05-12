@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MeshGradientView: View {
-    private let colors: [Color] = [
+    private var colors: [Color] = [
         .init(red: 0.60, green: 0.80, blue: 1.00), // Soft sky blue
         .init(red: 0.40, green: 0.70, blue: 0.90), // Cool blue
         .init(red: 0.30, green: 0.60, blue: 0.80), // Muted teal-blue
@@ -27,6 +27,12 @@ struct MeshGradientView: View {
         SIMD2<Float>(0.0, 0.5), SIMD2<Float>(0.5, 0.5), SIMD2<Float>(1.0, 0.5),
         SIMD2<Float>(0.0, 1.0), SIMD2<Float>(0.5, 1.0), SIMD2<Float>(1.0, 1.0)
     ]
+    
+    init(_ colours: [String]? = nil) {
+        if let colours {
+            self.colors = colours.map { Color(uiColor: .fromHex(UInt32($0.replacingOccurrences(of: "#", with: ""), radix: 16) ?? 0x00)) }
+        }
+    }
     
     var body: some View {
         TimelineView(.animation) { timeline in

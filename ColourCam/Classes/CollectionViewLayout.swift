@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 
 struct CollectionViewLayout {
-    var layout: UICollectionViewCompositionalLayout {
+    var colours: UICollectionViewCompositionalLayout {
         let configuration: UICollectionViewCompositionalLayoutConfiguration = .init()
         configuration.interSectionSpacing = 6
         
